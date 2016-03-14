@@ -56,7 +56,8 @@ def parse_single_post(data_string):
     git_ssh_url = post_msg['repository']['git_ssh_url']
     logger.debug(git_ssh_url)
     # get the real branch. refs/tags/1.0.0 => 1.0.0
-    branch = os.path.basename(post_msg['ref'])
+    # refs/heads/enhancement/auto-packaging-test-debs => enhancement/auto-packaging-test-debs
+    branch = '/'.join(post_msg['ref'].split('/')[2:])
     logger.debug(branch)
 
     clone_project(git_ssh_url, branch)
