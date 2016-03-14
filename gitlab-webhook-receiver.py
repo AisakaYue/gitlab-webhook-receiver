@@ -31,8 +31,8 @@ def clone_project(git_ssh_url, branch):
     proc.wait()
 
 
-def do_something(project_name):
-    cmd = '/bin/bash /tmp/{}/packaging.sh'.format(project_name)
+def do_something(project_name, object_kind='tag_push'):
+    cmd = 'TRIGGER={} /bin/bash /tmp/{}/packaging.sh'.format(object_kind, project_name)
     logger.debug('do something: %s', cmd)
     proc = subprocess.Popen(cmd, shell=True)
     proc.wait()
@@ -49,17 +49,24 @@ def parse_single_post(data_string):
     # parse data
     post_msg = json.loads(data_string)
     logger.debug(post_msg)
+    # get object_kind. push/tag_push/issue/note/merge_request
     object_kind = post_msg['object_kind']
     logger.debug(object_kind)
+    # get ssh url
     git_ssh_url = post_msg['repository']['git_ssh_url']
     logger.debug(git_ssh_url)
+    # get the real branch. refs/tags/1.0.0 => 1.0.0
     branch = os.path.basename(post_msg['ref'])
     logger.debug(branch)
+
     clone_project(git_ssh_url, branch)
+
     project_name = post_msg['repository']['name']
     logger.debug(project_name)
-    do_something(project_name)
+    do_something(project_name, object_kind)
+
     clean_project(project_name)
+
     logger.info('parsing finished')
 
 
