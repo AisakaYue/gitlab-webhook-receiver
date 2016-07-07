@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 import os
 import json
 import logging
@@ -137,7 +138,7 @@ def parse_cmdline():
     import argparse
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
-        '-p', '--port', default=80000, help='port of the service listening'
+        '-p', '--port', default=8000, help='port of the service listening'
     )
     argparser.add_argument(
         '--email-notify', dest='email_notify', action='store_true',
