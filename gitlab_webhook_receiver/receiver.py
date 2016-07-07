@@ -48,11 +48,14 @@ def send_email(subject, content):
 
 
 def clone_project(git_ssh_url, branch):
-    from sh import git
+    from sh import git, ErrorReturnCode
     os.chdir('/tmp')
-    p = git('clone', '-b', branch, git_ssh_url)
-    p.wait()
-    logger.info(p.cmd)
+    try:
+        p = git('clone', '-b', branch, git_ssh_url)
+        p.wait()
+        logger.info(p.cmd)
+    except ErrorReturnCode as e:
+        logger.info(e)
 
 
 def do_something(project_name, object_kind='tag_push'):
@@ -76,10 +79,14 @@ def do_something(project_name, object_kind='tag_push'):
 
 
 def clean_project(project_name):
-    from sh import sudo, rm
+    from sh import sudo, rm, ErrorReturnCode
     logger.info('clean project')
-    with sudo:
-        rm('-rf', '/tmp/{}'.format(project_name)).wait()
+    try:
+        with sudo:
+            rm('-rf', '/tmp/{}'.format(project_name)).wait()
+    except ErrorReturnCode as e:
+        logger.info(e)
+
 
 def parse_single_post(data_string):
     logger.info('start parsing data_string')
