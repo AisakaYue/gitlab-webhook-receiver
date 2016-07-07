@@ -106,7 +106,10 @@ def parse_single_post(data_string):
 
     # get the real branch. refs/tags/1.0.0 => 1.0.0
     # refs/heads/enhancement/auto-packaging-test-debs => enhancement/auto-packaging-test-debs
-    branch = '/'.join(post_msg['ref'].split('/')[2:])
+    if '/' in post_msg['ref']:
+        branch = '/'.join(post_msg['ref'].split('/')[2:])
+    else:
+        branch = post_msg['ref']
     logger.debug(branch)
     clone_project(git_ssh_url, branch)
 
