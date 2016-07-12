@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 import os
 import json
 import logging
@@ -47,11 +48,14 @@ def send_email(subject, content):
 
 
 def clone_project(git_ssh_url, branch):
-    from sh import git
+    from sh import git, ErrorReturnCode
     os.chdir('/tmp')
-    p = git('clone', '-b', branch, git_ssh_url)
-    p.wait()
-    logger.info(p.cmd)
+    try:
+        p = git('clone', '-b', branch, git_ssh_url)
+        p.wait()
+        logger.info(p.cmd)
+    except ErrorReturnCode as e:
+        logger.info(e)
 
 
 def do_something(project_name, object_kind='tag_push'):
@@ -75,10 +79,14 @@ def do_something(project_name, object_kind='tag_push'):
 
 
 def clean_project(project_name):
-    from sh import sudo, rm
+    from sh import sudo, rm, ErrorReturnCode
     logger.info('clean project')
-    with sudo:
-        rm('-rf', '/tmp/{}'.format(project_name)).wait()
+    try:
+        with sudo:
+            rm('-rf', '/tmp/{}'.format(project_name)).wait()
+    except ErrorReturnCode as e:
+        logger.info(e)
+
 
 def parse_single_post(data_string):
     logger.info('start parsing data_string')
@@ -98,7 +106,10 @@ def parse_single_post(data_string):
 
     # get the real branch. refs/tags/1.0.0 => 1.0.0
     # refs/heads/enhancement/auto-packaging-test-debs => enhancement/auto-packaging-test-debs
-    branch = '/'.join(post_msg['ref'].split('/')[2:])
+    if '/' in post_msg['ref']:
+        branch = '/'.join(post_msg['ref'].split('/')[2:])
+    else:
+        branch = post_msg['ref']
     logger.debug(branch)
     clone_project(git_ssh_url, branch)
 
@@ -137,7 +148,7 @@ def parse_cmdline():
     import argparse
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
-        '-p', '--port', default=80000, help='port of the service listening'
+        '-p', '--port', default=8000, help='port of the service listening'
     )
     argparser.add_argument(
         '--email-notify', dest='email_notify', action='store_true',
