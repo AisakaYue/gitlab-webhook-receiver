@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 import os
 import json
 import logging
@@ -9,20 +11,21 @@ import threading
 from Queue import Queue
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
-
-log_file = 'webhook.log'
-log_level = logging.DEBUG      # DEBUG is quite verbose
-logger = logging.getLogger('gitlab-webhook')
-logger.setLevel(log_level)
-log_handler = logging.handlers.RotatingFileHandler(log_file, backupCount=4)
-f = logging.Formatter("%(asctime)s %(filename)s %(levelname)s %(message)s",
-                      "%B %d %H:%M:%S")
-log_handler.setFormatter(f)
-logger.addHandler(log_handler)
-
+logger = None
 queue = Queue()
-
 options = None
+
+
+def init_logger(log_file):
+    global logger
+    log_level = logging.DEBUG      # DEBUG is quite verbose
+    logger = logging.getLogger('gitlab-webhook')
+    logger.setLevel(log_level)
+    log_handler = logging.handlers.RotatingFileHandler(log_file, backupCount=4)
+    f = logging.Formatter("%(asctime)s %(filename)s %(levelname)s %(message)s",
+                          "%B %d %H:%M:%S")
+    log_handler.setFormatter(f)
+    logger.addHandler(log_handler)
 
 
 def send_email(subject, content):
@@ -148,8 +151,9 @@ def parse_cmdline():
     import argparse
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
-        '-p', '--port', default=8000, help='port of the service listening'
+        '-p', '--port', default=8000, help='port of the service listening', required=True
     )
+    argparser.add_argument('--log-file', type=str, dest='log_file', required=True)
     argparser.add_argument(
         '--email-notify', dest='email_notify', action='store_true',
         help='notify the result of packaging.sh through email when it run failed'
@@ -169,6 +173,7 @@ def main():
     global options
     options = parse_cmdline()
 
+    init_logger(options.log_file)
     t = threading.Thread(target=parse_forever)
     t.setDaemon(True)
     t.start()
